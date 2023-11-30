@@ -1,0 +1,59 @@
+name: "Deploy SmartFace"
+description: "Generic action to build and deploy SmartFace to AWS Bucket"
+
+inputs:
+  target-root:
+    description: "Root path of the deployed target"
+    required: true
+  target-subpath:
+    description: "Subpath path of the deployed target"
+    required: true
+    default: "error"
+  public_url:
+    description: "SmartFace PUBLIC_URL"
+    required: true
+  framework:
+    description: "SmartFace framework to build"
+    required: true
+  application:
+    description: "SmartFace application to build"
+    required: true
+  aws-role-to-assume:
+    description: "AWS role to assume"
+    required: true
+  aws-region:
+    description: "AWS region"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: "yarn"
+
+    - name: Install dependencies
+      shell: bash
+      run: yarn install --immutable
+
+    - name: Build
+      shell: bash
+      run: yarn cross-env PUBLIC_URL=${{ inputs.public_url }}/${{ inputs.target-subpath }} node smart-face-scripts/index.js build ${{ inputs.framework }} ${{ inputs.application }}
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-artifacts
+        path: build
+
+    - name: Configure AWS credentials for Bucket
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: ${{ inputs.aws-role-to-assume }}
+        aws-region: ${{ inputs.aws-region }}
+
+    - name: Copy files to the Bucket with AWS CLI
+      shell: bash
+      run: aws s3 cp ./build/ s3://${{ inputs.target-root }}/${{ inputs.target-subpath }} --recursive --acl public-read
