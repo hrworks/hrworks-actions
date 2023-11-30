@@ -29,12 +29,6 @@ runs:
   using: "composite"
   # TODO check if yarn install is executed in the corred dir
   steps:
-    - name: Use Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: 18.x
-        cache: "yarn"
-
     - name: Send email
       shell: bash
       run: |
@@ -46,6 +40,12 @@ runs:
         pwd
         cd ..
         pwd
+
+    # - name: Use Node.js
+    #   uses: actions/setup-node@v3
+    #   with:
+    #     node-version: 18.x
+    #     cache: "yarn"
 
     # - name: Install dependencies
     #   shell: bash
