@@ -27,43 +27,27 @@ inputs:
 
 runs:
   using: "composite"
-  # TODO check if yarn install is executed in the corred dir
   steps:
-    - name: Send email
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: "yarn"
+
+    - name: Install dependencies
       shell: bash
-      run: |
-        pwd
-        ls -hal
-        cd ..
-        pwd
-        ls -hal
-        cd ..
-        pwd
-        ls -hal
-        cd ..
-        pwd
-        ls -hal
+      run: yarn install --immutable
 
-    # - name: Use Node.js
-    #   uses: actions/setup-node@v3
-    #   with:
-    #     node-version: 18.x
-    #     cache: "yarn"
+    - name: Build
+      shell: bash
+      run: yarn cross-env PUBLIC_URL=${{ inputs.public_url }}/${{ inputs.target-subpath }} node smart-face-scripts/index.js build ${{ inputs.framework }} ${{ inputs.application }}
 
-    # - name: Install dependencies
-    #   shell: bash
-    #   run: yarn install --immutable
+    - name: Configure AWS credentials for Bucket
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        role-to-assume: ${{ inputs.aws-role-to-assume }}
+        aws-region: ${{ inputs.aws-region }}
 
-    # - name: Build
-    #   shell: bash
-    #   run: yarn cross-env PUBLIC_URL=${{ inputs.public_url }}/${{ inputs.target-subpath }} node smart-face-scripts/index.js build ${{ inputs.framework }} ${{ inputs.application }}
-
-    # - name: Configure AWS credentials for Bucket
-    #   uses: aws-actions/configure-aws-credentials@v2
-    #   with:
-    #     role-to-assume: ${{ inputs.aws-role-to-assume }}
-    #     aws-region: ${{ inputs.aws-region }}
-
-    # - name: Copy files to the Bucket with AWS CLI
-    #   shell: bash
-    #   run: aws s3 cp ./build/ s3://${{ inputs.target-root }}/${{ inputs.target-subpath }} --recursive --acl public-read
+    - name: Copy files to the Bucket with AWS CLI
+      shell: bash
+      run: aws s3 cp ./build/ s3://${{ inputs.target-root }}/${{ inputs.target-subpath }} --recursive --acl public-read
