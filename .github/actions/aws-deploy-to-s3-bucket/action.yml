@@ -35,17 +35,17 @@ runs:
         node-version: 18.x
         cache: "yarn"
 
-    - name: Install dependencies
+    - name: Send email
       shell: bash
-        run: |
-          pwd
-          ls -hal
-          cd ..
-          pwd
-          cd ..
-          pwd
-          cd ..
-          pwd
+      run: |
+        pwd
+        ls -hal
+        cd ..
+        pwd
+        cd ..
+        pwd
+        cd ..
+        pwd
 
     # - name: Install dependencies
     #   shell: bash
