@@ -1,5 +1,5 @@
-name: "Deploy SmartFace"
-description: "Generic action to build and deploy SmartFace to AWS Bucket"
+name: "Build & Deploy SmartFace"
+description: "Build & Deploy SmartFace for all Frameworks & Applications to AWS Bucket"
 
 inputs:
   target-root:
