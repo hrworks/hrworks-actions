@@ -15,19 +15,6 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    - name: Show Me Action Folder
-      shell: bash
-      run: |
-        pwd
-        ls -hal
-
-    - name: Debug Environment
-      shell: bash
-      run: |
-        node --version
-        npm --version
-        yarn --version
-
     - name: Use Node.js
       uses: actions/setup-node@v3
       with:
