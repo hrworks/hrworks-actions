@@ -6,10 +6,10 @@ inputs:
     description: "SmartFace PUBLIC_URL"
     required: true
   framework:
-    description: "SmartFace framework to build"
+    description: "SmartFace Framework"
     required: true
   application:
-    description: "SmartFace application to build"
+    description: "SmartFace Application"
     required: true
 
 runs:
