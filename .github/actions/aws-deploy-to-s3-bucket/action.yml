@@ -1,22 +1,22 @@
-name: "Deploy"
-description: "Deploy Buildfolder to AWS S3 Bucket"
+name: 'Deploy'
+description: 'Deploy Buildfolder to AWS S3 Bucket'
 
 inputs:
   target-root:
-    description: "Root path of the deployed target"
+    description: 'Root path of the deployed target'
     required: true
   target-subpath:
-    description: "Subpath path of the deployed target"
+    description: 'Subpath path of the deployed target'
     required: true
-    default: "error"
+    default: 'error'
   aws-role-to-assume:
-    description: "AWS role to assume"
+    description: 'AWS role to assume'
     required: true
   aws-region:
-    description: "AWS region"
+    description: 'AWS region'
     required: true
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Configure AWS credentials for Bucket
       uses: aws-actions/configure-aws-credentials@v2

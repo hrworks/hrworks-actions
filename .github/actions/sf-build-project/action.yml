@@ -1,19 +1,19 @@
-name: "Build SmartFace"
-description: "Build SmartFace for all Frameworks & Applications"
+name: 'Build SmartFace'
+description: 'Build SmartFace for all Frameworks & Applications'
 
 inputs:
   public_url:
-    description: "SmartFace PUBLIC_URL"
+    description: 'SmartFace PUBLIC_URL'
     required: true
   framework:
-    description: "SmartFace Framework"
+    description: 'SmartFace Framework'
     required: true
   application:
-    description: "SmartFace Application"
+    description: 'SmartFace Application'
     required: true
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Show Me Action Folder
       shell: bash
@@ -21,11 +21,17 @@ runs:
         pwd
         ls -hal
 
+    - name: Debug Environment
+      run: |
+        node --version
+        npm --version
+        yarn --version
+
     - name: Use Node.js
       uses: actions/setup-node@v3
       with:
         node-version: 18.x
-        cache: "yarn"
+        cache: 'yarn'
 
     - name: Install dependencies
       shell: bash
