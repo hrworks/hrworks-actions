@@ -21,6 +21,12 @@ runs:
         node-version: 18.x
         cache: "yarn"
 
+    - name: debug folder
+      shell: bash
+      run: |
+        pwd
+        ls -hal
+
     - name: Install dependencies
       shell: bash
       run: yarn install --immutable
