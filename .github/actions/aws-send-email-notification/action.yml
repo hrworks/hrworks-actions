@@ -1,36 +1,33 @@
-name: "Send E-Mail Notification"
-description: "Send Notification to E-Mail Address via AWS"
+name: 'Send E-Mail Notification'
+description: 'Send Notification to E-Mail Address via AWS'
 
 inputs:
   aws-role-to-assume:
-    description: "AWS role to assume"
+    description: 'AWS role to assume'
     required: true
   aws-region:
-    description: "AWS region"
+    description: 'AWS region'
     required: true
   sender:
-    description: "Sender-Mail"
+    description: 'Sender email'
     required: true
   recipient:
-    description: "Recipient-Mail"
+    description: 'Recipient email'
     required: true
   subject:
-    description: "Subject"
-    required: true
-  text:
-    description: "TEXT"
+    description: 'Email subject'
     required: true
   html:
-    description: "HTML"
+    description: 'Email body'
     required: true
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - uses: actions/checkout@v3
 
     - name: Set up AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: ${{ inputs.aws-role-to-assume }}
         aws-region: ${{ inputs.aws-region }}
@@ -38,14 +35,8 @@ runs:
     - name: Send email
       shell: bash
       run: |
-        SENDER_EMAIL="${{ inputs.sender }}"
-        RECIPIENT_EMAIL="${{ inputs.recipient }}"
-        SUBJECT="${{ inputs.subject }}"
-        BODY="${{ inputs.text }}"
-        HTML="<p>${{ inputs.html }}</p>"
         aws ses send-email \
-          --from "$SENDER_EMAIL" \
-          --to "$RECIPIENT_EMAIL" \
-          --subject "$SUBJECT" \
-          --text "$TEXT" \
-          --html "$HTML"
+          --from "${{ inputs.sender }}" \
+          --to "${{ inputs.recipient }}" \
+          --subject "${{ inputs.subject }}" \
+          --html "<p>${{ inputs.html }}</p>"

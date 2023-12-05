@@ -1,29 +1,33 @@
-name: 'Deploy'
-description: 'Deploy Buildfolder to AWS S3 Bucket'
+name: 'Deploy to AWS bucket'
+description: 'Generic action to deploy the file / folder to a specified AWS Bucket'
 
 inputs:
-  target-root:
-    description: 'Root path of the deployed target'
+  origin-path:
+    description: File / Folder to upload
     required: true
-  target-subpath:
-    description: 'Subpath path of the deployed target'
+  target-path:
+    description: Target Path to upload to
     required: true
-    default: 'error'
   aws-role-to-assume:
-    description: 'AWS role to assume'
     required: true
   aws-region:
-    description: 'AWS region'
     required: true
+  is-public:
+    description: If sources in bucket should be public, set ACL Permission to public-read
+    default: 'false'
+  is-file:
+    description: If origin-path is a file, skip the --recursive flag
+    default: 'false'
+
 runs:
   using: 'composite'
   steps:
-    - name: Configure AWS credentials for Bucket
-      uses: aws-actions/configure-aws-credentials@v2
+    - name: Configure AWS credentials for bucket
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: ${{ inputs.aws-role-to-assume }}
         aws-region: ${{ inputs.aws-region }}
 
-    - name: Copy files to the Bucket with AWS CLI
+    - name: Copy files to the bucket with AWS CLI
       shell: bash
-      run: aws s3 cp ./build/ s3://${{ inputs.target-root }}/${{ inputs.target-subpath }} --recursive --acl public-read
+      run: aws s3 cp ${{ inputs.origin-path }} s3://${{ inputs.target-path }}${{ inputs.is-file == 'false' && ' --recursive' || '' }}${{ inputs.is-public == 'true' && ' --acl public-read' || '' }}
