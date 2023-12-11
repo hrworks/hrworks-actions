@@ -38,9 +38,9 @@ runs:
     - name: Send email
       shell: bash
       run: |
-        sender_parameter="\"${{ inputs.sender-name }} <${{ inputs.sender-email }} >\""
+        sender_parameter="${{ inputs.sender-name }} <${{ inputs.sender-email }}>"
         aws ses send-email \
-          --from ${sender_parameter} \
+          --from "${sender_parameter}" \
           --to "${{ inputs.recipient }}" \
           --subject "${{ inputs.subject }}" \
-          --html "<p>${{ inputs.html }}</p>"
+          --html "<div>${{ inputs.html }}</div>"
