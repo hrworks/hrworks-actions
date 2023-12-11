@@ -8,8 +8,11 @@ inputs:
   aws-region:
     description: 'AWS region'
     required: true
-  sender:
+  sender-email:
     description: 'Sender email'
+    required: true
+  sender-name:
+    description: 'Sender name'
     required: true
   recipient:
     description: 'Recipient email'
@@ -35,8 +38,9 @@ runs:
     - name: Send email
       shell: bash
       run: |
+        sender_parameter="\"${{ inputs.sender-name }} <${{ inputs.sender-email }} >\""
         aws ses send-email \
-          --from "${{ inputs.sender }}" \
+          --from ${sender_parameter} \
           --to "${{ inputs.recipient }}" \
           --subject "${{ inputs.subject }}" \
           --html "<p>${{ inputs.html }}</p>"
