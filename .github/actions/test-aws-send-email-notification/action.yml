@@ -1,0 +1,49 @@
+name: 'Send E-Mail Notification'
+description: 'Send Notification to E-Mail Address via AWS'
+
+inputs:
+  aws-role-to-assume:
+    description: 'AWS role to assume'
+    required: true
+  aws-region:
+    description: 'AWS region'
+    required: true
+  sender-email:
+    description: 'Sender email'
+    required: true
+  sender-name:
+    description: 'Sender name'
+    required: true
+  recipient:
+    description: 'Recipient email'
+    required: true    
+  reply-to:
+    description: 'Reply to addresses'
+  subject:
+    description: 'Email subject'
+    required: true
+  html:
+    description: 'Email body'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ inputs.aws-role-to-assume }}
+        aws-region: ${{ inputs.aws-region }}
+
+    - name: Send email
+      shell: bash
+      run: |
+        sender_parameter="${{ inputs.sender-name }} <${{ inputs.sender-email }}>"
+        aws ses send-email \
+          --from "${sender_parameter}" \
+          --to "${{ inputs.recipient }}" \
+          --reply-to-addresses "${{ inputs.reply_to }}" \
+          --subject "${{ inputs.subject }}" \
+          --html "<div>${{ inputs.html }}</div>"
