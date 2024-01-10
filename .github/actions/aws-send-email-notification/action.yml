@@ -17,6 +17,9 @@ inputs:
   recipient:
     description: 'Recipient email'
     required: true
+  reply-to:
+    description: 'Reply to addresses'
+    default: 'noreply@hrworks.de'
   subject:
     description: 'Email subject'
     required: true
@@ -43,4 +46,5 @@ runs:
           --from "${sender_parameter}" \
           --to "${{ inputs.recipient }}" \
           --subject "${{ inputs.subject }}" \
-          --html "<div>${{ inputs.html }}</div>"
+          --html "<div>${{ inputs.html }}</div>" \
+          --reply-to-addresses '${{ inputs.reply-to }}'
