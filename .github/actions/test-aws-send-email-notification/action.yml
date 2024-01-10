@@ -41,9 +41,14 @@ runs:
       shell: bash
       run: |
         sender_parameter="${{ inputs.sender-name }} <${{ inputs.sender-email }}>"
-        aws ses send-email \
-          --from "${sender_parameter}" \
-          --to "${{ inputs.recipient }}" \
-          --reply-to-addresses "${{ inputs.reply-to }}" \
-          --subject "${{ inputs.subject }}" \
-          --html "<div>${{ inputs.html }}</div>"
+        command="aws ses send-email \
+          --from '${sender_parameter}' \
+          --to '${{ inputs.recipient }}' \
+          --subject '${{ inputs.subject }}' \
+          --html '<div>${{ inputs.html }}</div>'"
+
+        if [ -n "${{ inputs.reply-to }}" ]; then
+          command="$command --reply-to-addresses '${{ inputs.reply-to }}'"
+        fi
+
+        $command
