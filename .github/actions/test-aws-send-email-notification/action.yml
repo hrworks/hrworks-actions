@@ -19,6 +19,7 @@ inputs:
     required: true    
   reply-to:
     description: 'Reply to addresses'
+    default: 'noreply@hrworks.de'
   subject:
     description: 'Email subject'
     required: true
@@ -41,14 +42,9 @@ runs:
       shell: bash
       run: |
         sender_parameter="${{ inputs.sender-name }} <${{ inputs.sender-email }}>"
-        command="aws ses send-email \
-          --from '${sender_parameter}' \
-          --to '${{ inputs.recipient }}' \
-          --subject '${{ inputs.subject }}' \
-          --html '<div>${{ inputs.html }}</div>'"
-
-        if [ -n "${{ inputs.reply-to }}" ]; then
-          command="$command --reply-to-addresses '${{ inputs.reply-to }}'"
-        fi
-
-        $command
+        aws ses send-email \
+          --from "${sender_parameter}" \
+          --to "${{ inputs.recipient }}" \
+          --subject "${{ inputs.subject }}" \
+          --html "<div>${{ inputs.html }}</div>" \
+          --reply-to-addresses '${{ inputs.reply-to }}'
