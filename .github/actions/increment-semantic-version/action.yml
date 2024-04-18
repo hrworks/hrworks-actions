@@ -1,0 +1,92 @@
+name: Increment Semantic Version
+description: 'Increment given Version depending on increment-type'
+
+inputs:
+  major-version:
+    type: number
+    required: true
+  minor-version:
+    type: number
+    required: true
+  patch-version:
+    type: number
+    required: false
+  increment-type:
+    description: 'Specific version that should be incremented (major, minor, patch)'
+    type: string
+    required: true
+outputs:
+  new-semantic-version:
+    description: 'Incremented Semantic Version'
+    value: ${{ steps.increment-semantic-version.outputs.newVersionNr }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Validate inputs
+      shell: bash
+      run: |
+        major="${{ inputs.major-version }}"
+        minor="${{ inputs.minor-version }}"
+        patch="${{ inputs.patch-version }}"
+        incrementType="${{ inputs.increment-type }}"
+        if [[ -z "$major" ]]; then
+          echo "major-version is empty"
+          exit 1
+        fi
+        if [[ -z "$minor" ]]; then
+          echo "minor-version is empty"
+          exit 1
+        fi
+        if [[ -z "$incrementType" ]]; then
+          echo "increment-type is empty"
+          exit 1
+        fi
+        if [[ ! "$major" =~ ^[0-9]+$ ]]; then
+          echo "major-version is not a digit"
+          exit 1
+        fi
+        if [[ ! "$minor" =~ ^[0-9]+$ ]]; then
+          echo "minor-version is not a digit"
+          exit 1
+        fi
+        if [[ "$patch" && ! "$patch" =~ ^[0-9]+$ ]]; then
+          echo "patch-version is not a digit"
+          exit 1
+        fi
+        if [[ -z "$patch" && "$incrementType" == "patch" ]]; then
+          echo "Should increment patch number but patch-version is empty"
+          exit 1
+        fi
+        if [[ ! $incrementType =~ ^(major|minor|patch)$ ]]; then
+          echo "Invalid increment-type! Use major, minor or patch for increment-type"
+          exit 1
+        fi
+
+    - id: increment-semantic-version
+      name: Increment Semantic Version
+      shell: bash
+      run: |
+        major="${{ inputs.major-version }}"
+        minor="${{ inputs.minor-version }}"
+        patch="${{ inputs.patch-version }}"
+        incrementType="${{ inputs.increment-type }}"
+        if [[ "$incrementType" == "major" ]]; then
+          major=$((major+1))
+          minor=0
+          if [[ "$patch" ]]; then
+            patch=0
+          fi
+        elif [[ "$incrementType" == "minor" ]]; then
+          minor=$((minor+1))
+          if [[ "$patch" ]]; then
+            patch=0
+          fi
+        elif [[ "$patch" && "$incrementType" == "patch" ]]; then
+          patch=$((patch+1))
+        fi
+        newVersionNr=${major}.${minor}
+        if [[ "$patch" ]]; then
+          newVersionNr="${newVersionNr}.${patch}" # append patch
+        fi
+        echo "newVersionNr=${newVersionNr}" >> $GITHUB_OUTPUT
