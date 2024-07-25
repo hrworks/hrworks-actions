@@ -18,6 +18,11 @@ inputs:
   aws-bucket:
     description: 'The AWS Bucket'
     required: true
+  aws-bucket-path:
+    description: 'Path in AWS Bucket'
+    type: string
+    required: false
+    default: ''
 
 runs:
   using: 'composite'
@@ -61,7 +66,6 @@ runs:
         then
           status="backup"
         fi
-        echo $status #DEBUG
         echo "STATUS=$status" >> $GITHUB_ENV
 
     - name: Create bundle
@@ -94,4 +98,4 @@ runs:
     - name: Copy Backup to the Bucket with AWS CLI
       if: env.STATUS == 'backup'
       shell: bash
-      run: aws s3 cp ${{ env.FILE_NAME }} s3://${{ inputs.aws-bucket }}/DevOps/backups/${{ env.FILE_NAME }}
+      run: aws s3 cp ${{ env.FILE_NAME }} s3://${{ inputs.aws-bucket }}/${{ inputs.aws-bucket-path }}${{ env.FILE_NAME }}
