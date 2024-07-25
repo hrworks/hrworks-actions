@@ -1,0 +1,97 @@
+name: Repository Backup
+description: 'Create a compressed backup of a repository and upload it to the target AWS Bucket'
+
+inputs:
+  bundle-name:
+    description: 'Name of backup bundle in zip file'
+    type: string
+    required: true
+  secret-gh-token:
+    description: 'GitHub token required for repository authentication'
+    required: true
+  aws-role-to-assume:
+    description: 'The AWS role to assume'
+    required: true
+  aws-region:
+    description: 'The AWS region'
+    required: true
+  aws-bucket:
+    description: 'The AWS Bucket'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Parse filename from Workflow Caller
+      shell: bash
+      run: |
+        workflow_ref=${{ github.workflow_ref }}
+        workflow_path=${workflow_ref%%@refs/*} # remove everything including and after first @refs/ symbol
+        workflow_filename=$(basename $workflow_path) # parse filename
+        echo Workflow caller: $workflow_filename
+        echo "WORKFLOW_FILENAME=$workflow_filename" >> $GITHUB_ENV
+
+    - name: Get last and current head_sha
+      shell: bash
+      run: |
+        response_data=$(curl \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ inputs.secret-gh-token }}" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          ${{ github.api_url }}/repos/${{ github.repository }}/actions/workflows/${{ env.WORKFLOW_FILENAME }}/runs)
+        response_message=$(jq --raw-output '.message' <<< $response_data) # null if succeeded
+        response_status=$(jq --raw-output '.status' <<< $response_data) # null if succeeded
+
+        # response_data shouldn't include message atttribute if request succeeded (HTTP Status 200)
+        if [[ ! -z "$response_message" && "$response_message" != "null" ]]; then
+          echo "Request failed: $response_message (Status: $response_status)"
+          exit 1
+        fi
+
+        token_last=$(jq --raw-output '.workflow_runs[1] .head_sha' <<< $response_data)
+        token_current=$(jq --raw-output '.workflow_runs[0] .head_sha' <<< $response_data)
+        echo "LAST_HEADSHA=$token_last" >> $GITHUB_ENV
+        echo "CURRENT_HEADSHA=$token_current" >> $GITHUB_ENV
+
+    - name: Comparison of head_sha
+      shell: bash
+      run: |
+        status="skip"
+        if [ ${{ env.LAST_HEADSHA }} != ${{ env.CURRENT_HEADSHA }} ]
+        then
+          status="backup"
+        fi
+        echo $status #DEBUG
+        echo "STATUS=$status" >> $GITHUB_ENV
+
+    - name: Create bundle
+      if: env.STATUS == 'backup'
+      shell: bash
+      run: |
+        git fetch --all
+        git branch -r | grep -v '\->' | while read remote; do git branch --track "${remote#origin/}" "$remote" || true; done 2>/dev/null
+        git pull --all
+        git bundle create ${{ inputs.bundle-name }}.bundle --all
+        git bundle verify ${{ inputs.bundle-name }}.bundle
+
+    - name: Zip file name
+      if: env.STATUS == 'backup'
+      shell: bash
+      run: echo "FILE_NAME=$(date -I'seconds').zip" >> $GITHUB_ENV
+
+    - name: Zip bundle
+      if: env.STATUS == 'backup'
+      shell: bash
+      run: zip -q -r ${{ env.FILE_NAME }} ${{ inputs.bundle-name }}.bundle
+
+    - name: Configure AWS credentials for Bucket
+      if: env.STATUS == 'backup'
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{ inputs.aws-role-to-assume }}
+        aws-region: ${{ inputs.aws-region }}
+
+    - name: Copy Backup to the Bucket with AWS CLI
+      if: env.STATUS == 'backup'
+      shell: bash
+      run: aws s3 cp ${{ env.FILE_NAME }} s3://${{ inputs.aws-bucket }}/DevOps/backups/${{ env.FILE_NAME }}
