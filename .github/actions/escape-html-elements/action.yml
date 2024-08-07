@@ -1,0 +1,30 @@
+name: Escape HTML Elements
+descrription: 'Escapes HTML elements from input string that can be used later in a real HTML element'
+
+inputs:
+  string-to-escape:
+    description: 'String where HTML elements should be escaped'
+    type: string
+    required: true
+outputs:
+  escaped-string:
+    description: 'String with escaped HTML elements'
+    value: ${{ steps.escape-html.outputs.escapedString }}
+
+runs:
+  using: 'composite'
+  steps:
+    - id: escape-html
+      name: Escape HTML Elements from String
+      shell: bash
+      run: |
+        inputString="${{ inputs.string-to-escape }}"
+        if [[ -z "$inputString" ]]; then
+          echo "string-to-escape is empty"
+          exit 1
+        fi
+        {
+          echo 'escapedString<<EOF'
+          echo "$inputString" | sed 's/\&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&#39;/g'
+          echo EOF
+        } >> $GITHUB_OUTPUT
